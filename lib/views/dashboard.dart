@@ -1,24 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class NewsDashboard extends StatelessWidget {
-  final List<Map<String, String>> newsArticles = [
-    {
-      'title': 'Breaking News: Flutter 3.0 Released',
-      'description':
-          'Flutter 3.0 comes with significant updates, including null safety features, web support improvements, and more.',
-    },
-    {
-      'title': 'Tech Update: AI Revolutionizing Industries',
-      'description':
-          'From healthcare to finance, Artificial Intelligence is transforming every sector with its innovative solutions.',
-    },
-    {
-      'title': 'Global Event: Climate Change Conference 2023',
-      'description':
-          'Experts from around the world gather to discuss climate change impacts and sustainable solutions for the future.',
-    },
-    // Add more mock news articles here
-  ];
+import 'package:news_app/views/newsDetails.dart';
+
+class NewsDashboard extends StatefulWidget {
+  @override
+  _NewsDashboardState createState() => _NewsDashboardState();
+}
+
+class _NewsDashboardState extends State<NewsDashboard> {
+  List<Map<String, dynamic>> newsArticles = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchArticles();
+  }
+
+  static const searchWord = 'covid';
+
+  Future<void> fetchArticles() async {
+  final response = await http.get(Uri.parse('https://newsapi.org/v2/everything?q=${searchWord}&from=2024-02-2&sortBy=relevancy&apiKey=1246daf94c8a4d459ab5eb2d88a31833'));
+
+  if (response.statusCode == 200) {
+    // Assuming the JSON structure is something like { "articles": [ { "title": "...", "description": "..." }, ... ] }
+    Map<String, dynamic> responseBody = json.decode(response.body);
+    List<dynamic> articlesJson = responseBody['articles']; // Access the 'articles' key
+
+       setState(() {
+      newsArticles = articlesJson.map((article) {
+        return {
+          'title': article['title'],
+          'description': article['description'],
+          'urlToImage': article['urlToImage'],
+          'publishedAt': article['publishedAt'].substring(0, 10),
+          'url': article['url'],
+          'source': '${(article['source'] as Map<String, dynamic>)['name'] ?? 'Unknown'}',
+          'content':article['content']
+          // Include other fields as needed
+        };
+      }).toList();
+    });
+  } else {
+    // Handle the error; maybe show an alert or a placeholder
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -34,10 +62,9 @@ class NewsDashboard extends StatelessWidget {
           return Card(
             margin: EdgeInsets.all(8.0),
             child: ListTile(
-              title: Text(article['title']!),
-              subtitle: Text(article['description']!),
+              title: Text(article['title']),
+              subtitle: Text(article['description'] ?? 'No Description Available'),
               onTap: () {
-                // Handle the tap event, e.g., navigate to a detailed news view
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -48,25 +75,6 @@ class NewsDashboard extends StatelessWidget {
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-class NewsDetails extends StatelessWidget {
-  final Map<String, String> article;
-
-  const NewsDetails({required this.article});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(article['title']!),
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Text(article['description']!),
       ),
     );
   }
