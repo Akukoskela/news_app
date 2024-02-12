@@ -1,3 +1,3 @@
-# news_app
+# News App
 
-A new Flutter project.
+Mobile application that shows news on different platforms related to your search word
