@@ -55,6 +55,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '890272078916',
     projectId: 'news-app-51b2b',
     authDomain: 'news-app-51b2b.firebaseapp.com',
+    databaseURL: 'https://news-app-51b2b-default-rtdb.europe-west1.firebasedatabase.app',
     storageBucket: 'news-app-51b2b.appspot.com',
   );
 
@@ -63,6 +64,7 @@ class DefaultFirebaseOptions {
     appId: '1:890272078916:android:734d3c905987b8ef3df011',
     messagingSenderId: '890272078916',
     projectId: 'news-app-51b2b',
+    databaseURL: 'https://news-app-51b2b-default-rtdb.europe-west1.firebasedatabase.app',
     storageBucket: 'news-app-51b2b.appspot.com',
   );
 }
