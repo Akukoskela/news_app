@@ -5,7 +5,7 @@ import 'package:news_app/views/dashboard.dart';
 
 // Here we get the current user
 User? user = FirebaseAuth.instance.currentUser;
-// Here we connect to database
+// Here we connect to the database
 final databaseReference = FirebaseDatabase.instance.ref();
 
 class Home extends StatefulWidget {
@@ -25,24 +25,26 @@ class _HomeState extends State<Home> {
   }
 
   void sendData(String searchWord) {
-  final userTasksRef = databaseReference.child('users/${user?.uid}/search_word').push();
-  userTasksRef.set(searchWord);
-}
+    final userTasksRef = databaseReference.child('users/${user?.uid}/search_word').push();
+    userTasksRef.set(searchWord);
+  }
 
-  void fetchLatestSearches() async {
+  void fetchLatestSearches() {
     final userSearchesRef = FirebaseDatabase.instance.ref('users/${FirebaseAuth.instance.currentUser?.uid}/search_word');
-    DataSnapshot snapshot = await userSearchesRef.limitToFirst(3).get();
+    userSearchesRef.limitToLast(3).onValue.listen((event) {
+      final DataSnapshot snapshot = event.snapshot;
 
-    if (snapshot.exists) {
-      List<String> searches = [];
-      Map<dynamic, dynamic> values = snapshot.value as Map<dynamic, dynamic>;
-      values.forEach((key, value) {
-        searches.add(value);
-      });
-      setState(() {
-        latestSearches = searches;
-      });
-    }
+      if (snapshot.exists) {
+        List<String> searches = [];
+        Map<dynamic, dynamic> values = snapshot.value as Map<dynamic, dynamic>;
+        values.forEach((key, value) {
+          searches.insert(0, value); // Insert at the beginning to maintain the order
+        });
+        setState(() {
+          latestSearches = searches;
+        });
+      }
+    });
   }
 
   void performSearch({String? searchWord}) {
@@ -79,7 +81,10 @@ class _HomeState extends State<Home> {
                   hintText: 'Enter search term...',
                   border: InputBorder.none,
                 ),
-                onSubmitted: (value) => {performSearch(),sendData(value)},
+                onSubmitted: (value) {
+                  performSearch(searchWord: value);
+                  sendData(value);
+                },
               )
             : Text('Home'),
         actions: _isSearching
