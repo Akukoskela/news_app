@@ -77,7 +77,7 @@ class _HomeState extends State<Home> {
             ? TextField(
                 controller: _searchController,
                 autofocus: true,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: 'Enter search term...',
                   border: InputBorder.none,
                 ),
@@ -86,11 +86,11 @@ class _HomeState extends State<Home> {
                   sendData(value);
                 },
               )
-            : Text('Home'),
+            : const Text('Home'),
         actions: _isSearching
             ? [
                 IconButton(
-                  icon: Icon(Icons.clear),
+                  icon: const Icon(Icons.clear),
                   onPressed: () {
                     _searchController.clear();
                     toggleSearch();
@@ -99,7 +99,7 @@ class _HomeState extends State<Home> {
               ]
             : [
                 IconButton(
-                  icon: Icon(Icons.search),
+                  icon: const Icon(Icons.search),
                   onPressed: toggleSearch,
                 ),
               ],
@@ -111,13 +111,13 @@ class _HomeState extends State<Home> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             if (!_isSearching)
-              Text(
+              const Text(
                 'What do you want to search today?',
                 style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
               ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             if (!_isSearching && latestSearches.isNotEmpty)
-              Text(
+              const Text(
                 'Latest Searches:',
                 style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
               ),
@@ -127,7 +127,7 @@ class _HomeState extends State<Home> {
                 separatorBuilder: (context, index) => Divider(color: Colors.grey.shade400),
                 itemBuilder: (context, index) {
                   return ListTile(
-                    leading: Icon(Icons.history),
+                    leading: const Icon(Icons.history),
                     title: Text(latestSearches[index]),
                     onTap: () => performSearch(searchWord: latestSearches[index]),
                   );
