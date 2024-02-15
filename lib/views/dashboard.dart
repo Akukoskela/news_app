@@ -5,8 +5,9 @@ import 'dart:convert';
 
 class NewsDashboard extends StatefulWidget {
   final String searchWord;
+  final String language;
 
-  NewsDashboard({required this.searchWord});
+  NewsDashboard({required this.searchWord,required this.language});
 
   @override
   _NewsDashboardState createState() => _NewsDashboardState();
@@ -22,7 +23,7 @@ class _NewsDashboardState extends State<NewsDashboard> {
   }
 
   Future<void> fetchArticles() async {
-    final response = await http.get(Uri.parse('https://newsapi.org/v2/everything?q=${widget.searchWord}&from=2024-02-2&sortBy=relevancy&apiKey=1246daf94c8a4d459ab5eb2d88a31833'));
+    final response = await http.get(Uri.parse('https://newsapi.org/v2/everything?q=${widget.searchWord}&from=2024-02-02&sortBy=relevancy&language=${widget.language}&apiKey=1246daf94c8a4d459ab5eb2d88a31833'));
 
     if (response.statusCode == 200) {
       Map<String, dynamic> responseBody = json.decode(response.body);

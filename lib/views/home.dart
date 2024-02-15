@@ -3,9 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:news_app/views/dashboard.dart';
 
-// Here we get the current user
 User? user = FirebaseAuth.instance.currentUser;
-// Here we connect to the database
 final databaseReference = FirebaseDatabase.instance.ref();
 
 class Home extends StatefulWidget {
@@ -16,7 +14,9 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
-  List<String> latestSearches = []; // List to store the latest searches
+  List<String> latestSearches = [];
+  String? _selectedLanguage; // Variable to store the selected language
+  final List<String> _languages = ['en', 'fi']; // List of languages for the dropdown
 
   @override
   void initState() {
@@ -38,7 +38,7 @@ class _HomeState extends State<Home> {
         List<String> searches = [];
         Map<dynamic, dynamic> values = snapshot.value as Map<dynamic, dynamic>;
         values.forEach((key, value) {
-          searches.insert(0, value); // Insert at the beginning to maintain the order
+          searches.insert(0, value);
         });
         setState(() {
           latestSearches = searches;
@@ -47,18 +47,19 @@ class _HomeState extends State<Home> {
     });
   }
 
-  void performSearch({String? searchWord}) {
+  void performSearch({String? searchWord, String? language}) {
     searchWord = searchWord ?? _searchController.text.trim();
+    language = language ?? _selectedLanguage ?? 'en'; // Default to English if no language is selected
     if (searchWord.isNotEmpty) {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => NewsDashboard(searchWord: searchWord!),
+          builder: (context) => NewsDashboard(searchWord: searchWord!, language: language!),
         ),
       );
-      _searchController.clear(); // Clear the search field after searching
+      _searchController.clear();
       if (!_isSearching) {
-        toggleSearch(); // Reset the search state
+        toggleSearch();
       }
     }
   }
@@ -76,7 +77,7 @@ class _HomeState extends State<Home> {
         title: _isSearching
             ? TextField(
                 controller: _searchController,
-                autofocus: true,
+                
                 decoration: const InputDecoration(
                   hintText: 'Enter search term...',
                   border: InputBorder.none,
@@ -87,23 +88,38 @@ class _HomeState extends State<Home> {
                 },
               )
             : const Text('Home'),
-        actions: _isSearching
-            ? [
-                IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _searchController.clear();
-                    toggleSearch();
-                  },
-                ),
-              ]
-            : [
-                IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: toggleSearch,
-                ),
-              ],
-        centerTitle: true,
+        actions: [
+          if (_isSearching)
+            IconButton(
+              icon: const Icon(Icons.clear),
+              onPressed: () {
+                _searchController.clear();
+                toggleSearch();
+              },
+            ),
+          if (!_isSearching)
+            DropdownButton<String>(
+              value: _selectedLanguage,
+              hint: Text('Select Language'),
+              items: _languages.map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedLanguage = newValue;
+                });
+              },
+            ),
+          if (!_isSearching)
+            IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: toggleSearch,
+            ),
+        ],
+        centerTitle: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
