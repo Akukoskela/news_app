@@ -3,7 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:news_app/views/dashboard.dart';
 
+// Here we get the current user
 User? user = FirebaseAuth.instance.currentUser;
+// Here we connect to the database
 final databaseReference = FirebaseDatabase.instance.ref();
 
 class Home extends StatefulWidget {
@@ -14,9 +16,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
-  List<String> latestSearches = [];
-  String? _selectedLanguage; // Variable to store the selected language
-  final List<String> _languages = ['en', 'fi']; // List of languages for the dropdown
+  List<String> latestSearches = []; // List to store the latest searches
 
   @override
   void initState() {
@@ -25,41 +25,49 @@ class _HomeState extends State<Home> {
   }
 
   void sendData(String searchWord) {
-    final userTasksRef = databaseReference.child('users/${user?.uid}/search_word').push();
+    final userTasksRef =
+        databaseReference.child('users/${user?.uid}/search_word').push();
     userTasksRef.set(searchWord);
   }
 
   void fetchLatestSearches() {
-    final userSearchesRef = FirebaseDatabase.instance.ref('users/${FirebaseAuth.instance.currentUser?.uid}/search_word');
-    userSearchesRef.limitToLast(3).onValue.listen((event) {
+    final userSearchesRef = FirebaseDatabase.instance
+        .ref('users/${FirebaseAuth.instance.currentUser?.uid}/search_word');
+    userSearchesRef.orderByKey().onValue.listen((event) {
       final DataSnapshot snapshot = event.snapshot;
 
       if (snapshot.exists) {
         List<String> searches = [];
         Map<dynamic, dynamic> values = snapshot.value as Map<dynamic, dynamic>;
         values.forEach((key, value) {
-          searches.insert(0, value);
+          searches.add(value); // Insert at the end
         });
+
+        // Get the latest three searches in the correct order
+        List<String> latestThreeSearches = searches.reversed.take(3).toList();
+
         setState(() {
-          latestSearches = searches;
+          latestSearches = latestThreeSearches;
         });
       }
     });
   }
 
-  void performSearch({String? searchWord, String? language}) {
+  void performSearch({String? searchWord}) {
     searchWord = searchWord ?? _searchController.text.trim();
-    language = language ?? _selectedLanguage ?? 'en'; // Default to English if no language is selected
     if (searchWord.isNotEmpty) {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => NewsDashboard(searchWord: searchWord!, language: language!),
+          builder: (context) => NewsDashboard(
+            searchWord: searchWord!,
+            language: '',
+          ),
         ),
       );
-      _searchController.clear();
+      _searchController.clear(); // Clear the search field after searching
       if (!_isSearching) {
-        toggleSearch();
+        toggleSearch(); // Reset the search state
       }
     }
   }
@@ -77,7 +85,7 @@ class _HomeState extends State<Home> {
         title: _isSearching
             ? TextField(
                 controller: _searchController,
-                
+                autofocus: true,
                 decoration: const InputDecoration(
                   hintText: 'Enter search term...',
                   border: InputBorder.none,
@@ -88,38 +96,23 @@ class _HomeState extends State<Home> {
                 },
               )
             : const Text('Home'),
-        actions: [
-          if (_isSearching)
-            IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: () {
-                _searchController.clear();
-                toggleSearch();
-              },
-            ),
-          if (!_isSearching)
-            DropdownButton<String>(
-              value: _selectedLanguage,
-              hint: Text('Select Language'),
-              items: _languages.map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedLanguage = newValue;
-                });
-              },
-            ),
-          if (!_isSearching)
-            IconButton(
-              icon: const Icon(Icons.search),
-              onPressed: toggleSearch,
-            ),
-        ],
-        centerTitle: false,
+        actions: _isSearching
+            ? [
+                IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _searchController.clear();
+                    toggleSearch();
+                  },
+                ),
+              ]
+            : [
+                IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: toggleSearch,
+                ),
+              ],
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -140,12 +133,14 @@ class _HomeState extends State<Home> {
             Expanded(
               child: ListView.separated(
                 itemCount: latestSearches.length,
-                separatorBuilder: (context, index) => Divider(color: Colors.grey.shade400),
+                separatorBuilder: (context, index) =>
+                    Divider(color: Colors.grey.shade400),
                 itemBuilder: (context, index) {
                   return ListTile(
                     leading: const Icon(Icons.history),
                     title: Text(latestSearches[index]),
-                    onTap: () => performSearch(searchWord: latestSearches[index]),
+                    onTap: () =>
+                        performSearch(searchWord: latestSearches[index]),
                   );
                 },
               ),
